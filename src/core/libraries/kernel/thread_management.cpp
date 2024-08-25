@@ -1058,15 +1058,25 @@ int PS4_SYSV_ABI scePthreadCreate(ScePthread* thread, const ScePthreadAttr* attr
 
 ScePthread PThreadPool::Create() {
     std::scoped_lock lock{m_mutex};
-
+/*
     for (auto* p : m_threads) {
         if (p->is_free) {
             p->is_free = false;
             return p;
         }
     }
+*/
 
+#ifdef _WIN64
     auto* ret = new PthreadInternal{};
+#else
+    // TODO: Linux specific hack
+    static u8* hint_address = reinterpret_cast<u8*>(0x7FFFFC000ULL);
+    auto* ret = reinterpret_cast<PthreadInternal*>(
+    mmap(hint_address, sizeof(PthreadInternal), PROT_READ | PROT_WRITE,
+             MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0));
+    hint_address += Common::AlignUp(sizeof(PthreadInternal), 4_KB);
+#endif
     ret->is_free = false;
     ret->is_detached = false;
     ret->is_almost_done = false;
