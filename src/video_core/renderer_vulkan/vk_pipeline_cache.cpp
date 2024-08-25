@@ -146,6 +146,9 @@ const GraphicsPipeline* PipelineCache::GetGraphicsPipeline() {
 
 const ComputePipeline* PipelineCache::GetComputePipeline() {
     RefreshComputeKey();
+    if(compute_key == 0x8b355b5a)
+	    return nullptr;
+
     const auto [it, is_new] = compute_pipelines.try_emplace(compute_key);
     if (is_new) {
         it.value() = std::make_unique<ComputePipeline>(instance, scheduler, *pipeline_cache,
