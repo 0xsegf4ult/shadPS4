@@ -18,6 +18,7 @@ endif()
 project(shadPS4)
 
 option(ENABLE_QT_GUI "Enable the Qt GUI. If not selected then the emulator uses a minimal SDL-based UI instead" OFF)
+option(ENABLE_USERFAULTFD "Use userfaultfd for handling page faults on linux systems" OFF)
 
 # This function should be passed a list of all files in a target. It will automatically generate file groups
 # following the directory hierarchy, so that the layout of the files in IDEs matches the one in the filesystem.
@@ -107,6 +108,12 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Ap
     if(LIBCPP)
         add_compile_options(-fexperimental-library)
     endif()
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+	if(ENABLE_USERFAULTFD)
+		add_compile_options(-DENABLE_USERFAULTFD)
+	endif()
 endif()
 
 add_subdirectory(externals)
