@@ -32,6 +32,8 @@ void EmitWorkgroupMemoryBarrier(EmitContext& ctx);
 void EmitDeviceMemoryBarrier(EmitContext& ctx);
 void EmitGetScc(EmitContext& ctx);
 void EmitGetExec(EmitContext& ctx);
+void EmitGetExecLo(EmitContext& ctx);
+void EmitGetExecHi(EmitContext& ctx);
 void EmitGetVcc(EmitContext& ctx);
 void EmitGetSccLo(EmitContext& ctx);
 void EmitGetVccLo(EmitContext& ctx);

@@ -301,6 +301,14 @@ void EmitGetExec(EmitContext& ctx) {
     UNREACHABLE_MSG("Unreachable instruction");
 }
 
+void EmitGetExecLo(EmitContext& ctx) {
+    UNREACHABLE_MSG("Unreachable instruction");
+}
+
+void EmitGetExecHi(EmitContext& ctx) {
+    UNREACHABLE_MSG("Unreachable instruction");
+}
+
 void EmitGetVcc(EmitContext& ctx) {
     UNREACHABLE_MSG("Unreachable instruction");
 }

@@ -149,6 +149,20 @@ T Translator::GetSrc(const InstOperand& operand) {
             value = ir.GetVccHi();
         }
         break;
+	case OperandField::ExecLo:
+		if constexpr (is_float) {
+			value = ir.BitCast<IR::F32>(ir.GetExecLo());
+		} else {
+			value = ir.GetExecLo();
+		}
+		break;
+	case OperandField::ExecHi:
+		if constexpr (is_float) {
+			value = ir.BitCast<IR::F32>(ir.GetExecHi());
+		} else {
+			value = ir.GetExecHi();
+		}
+		break;
     case OperandField::M0:
         if constexpr (is_float) {
             UNREACHABLE();
