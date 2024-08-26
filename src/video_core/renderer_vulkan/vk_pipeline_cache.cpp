@@ -146,12 +146,11 @@ const GraphicsPipeline* PipelineCache::GetGraphicsPipeline() {
 
 const ComputePipeline* PipelineCache::GetComputePipeline() {
     RefreshComputeKey();
-    if(compute_key == 0x8b355b5a)
-	    return nullptr;
+   
 
     const auto [it, is_new] = compute_pipelines.try_emplace(compute_key);
     if (is_new) {
-        it.value() = std::make_unique<ComputePipeline>(instance, scheduler, *pipeline_cache,
+	it.value() = std::make_unique<ComputePipeline>(instance, scheduler, *pipeline_cache,
                                                        compute_key, *infos[0], modules[0]);
     }
     const ComputePipeline* pipeline = it->second.get();
@@ -303,6 +302,7 @@ void PipelineCache::DumpShader(std::span<const u32> code, u64 hash, Shader::Stag
         std::filesystem::create_directories(dump_dir);
     }
     const auto filename = fmt::format("{}_{:#018x}_{}.{}", stage, hash, perm_idx, ext);
+    LOG_INFO(Render_Vulkan, "Dumping shader {}", filename);
     const auto file = IOFile{dump_dir / filename, FileAccessMode::Write};
     file.WriteSpan(code);
 }

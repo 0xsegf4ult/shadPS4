@@ -218,6 +218,37 @@ struct PM4CmdNop {
     };
 };
 
+struct PM4CmdSetBase {
+	PM4Type3Header header;
+
+	enum BaseIndexType : u32 {
+		DisplayList_PT = 0b0000,
+		DrawIndexedIndirect_PT = 0b0001,
+		GDS_Partition_Bases = 0b0010,
+		CE_Partition_Bases = 0b0011
+	};
+
+	union
+	{
+		u32 dw2;
+		BitField<0, 4, u32> base_index;
+	};
+
+	union
+	{
+		u32 dw3;
+		BitField<3, 28, u32> address_lo;
+		BitField<0, 16, u32> cs1_index;
+	};
+
+	union
+	{
+		u32 dw4;
+		BitField<0, 16, u32> address_hi;
+		BitField<0, 16, u32> cs2_index;
+	};
+};
+	
 struct PM4CmdDrawIndexOffset2 {
     PM4Type3Header header;
     u32 max_size;       ///< Maximum number of indices

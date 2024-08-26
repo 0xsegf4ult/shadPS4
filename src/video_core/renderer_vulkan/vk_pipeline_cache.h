@@ -64,7 +64,7 @@ private:
             program->info = MakeShaderInfo(stage, pgm->user_data, pgm_base, hash, liverpool->regs);
             u32 start_binding = binding;
             const auto module = CompileModule(program->info, pgm->Code(), 0, start_binding);
-            stage_key = program->info.GetStageSpecializedKey(binding);
+	    stage_key = program->info.GetStageSpecializedKey(binding);
             program->modules.emplace_back(stage_key, module);
             it_pgm.value() = program;
         } else {
@@ -81,7 +81,8 @@ private:
                                            liverpool->regs);
             const size_t perm_idx = program->modules.size();
             const auto module = CompileModule(new_info, pgm->Code(), perm_idx, binding);
-            program->modules.emplace_back(stage_key, module);
+            program->modules.emplace_back(stage_key, module); 
+	    return std::make_tuple(&info, program->modules.back().second, HashCombine(hash, stage_key));
         } else {
             binding += info.NumBindings();
         }

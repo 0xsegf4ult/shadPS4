@@ -3,6 +3,7 @@
 
 #include "shader_recompiler/backend/spirv/emit_spirv_instructions.h"
 #include "shader_recompiler/backend/spirv/spirv_emit_context.h"
+#include "common/logging/log.h"
 
 #include <magic_enum.hpp>
 
@@ -489,12 +490,16 @@ static void EmitStoreBufferFormatF32xN(EmitContext& ctx, u32 handle, Id address,
     const auto format = buffer.dfmt;
     const auto num_format = buffer.nfmt;
 
+	bool is_float = (num_format == AmdGpu::NumberFormat::Float); 
     switch (format) {
     case AmdGpu::DataFormat::FormatInvalid:
         return;
+    case AmdGpu::DataFormat::Format16_16_16_16:
+    case AmdGpu::DataFormat::Format10_11_11:
+    case AmdGpu::DataFormat::Format16_16:
+	LOG_INFO(Render_Recompiler, "number format is {}", magic_enum::enum_name(num_format));
     case AmdGpu::DataFormat::Format8_8_8_8:
     case AmdGpu::DataFormat::Format16:
-    case AmdGpu::DataFormat::Format16_16_16_16:
     case AmdGpu::DataFormat::Format32:
     case AmdGpu::DataFormat::Format32_32:
     case AmdGpu::DataFormat::Format32_32_32_32: {
@@ -509,18 +514,31 @@ static void EmitStoreBufferFormatF32xN(EmitContext& ctx, u32 handle, Id address,
             const u32 bit_width = AmdGpu::ComponentBits(format, i);
             const u32 bit_offset = AmdGpu::ComponentOffset(format, i) % 32;
 
-            const Id comp{ConvertF32ToFormat(
+            Id comp{};
+
+	    /*
+	    const Id comp{ConvertF32ToFormat(
                 ctx, N == 1 ? value : ctx.OpCompositeExtract(ctx.F32[1], value, i), num_format,
                 bit_width)};
+		*/
+
+	    if(is_float)
+	    {
+                comp = ctx.OpBitcast(ctx.U32[1], N == 1 ? value : ctx.OpCompositeExtract(ctx.F32[1], value, i));
+	    } else {
+	        comp = ConvertF32ToFormat(ctx, N == 1 ? value : ctx.OpCompositeExtract(ctx.F32[1], value, i), num_format, bit_width);
+	    }
+
+	    
 
             if (bit_width == 32) {
                 if constexpr (N == 1) {
-                    ctx.OpStore(ptr, comp);
+                    ctx.OpStore(ptr, is_float ? ctx.OpConvertUToF(ctx.F32[1], comp) : comp);
                 } else {
                     const Id index_i = ctx.OpIAdd(ctx.U32[1], index, ctx.ConstU32(i));
                     const Id ptr = ctx.OpAccessChain(buffer.pointer_type, buffer.id,
-                                                     ctx.u32_zero_value, index_i);
-                    ctx.OpStore(ptr, comp);
+                                                     is_float ? ctx.f32_zero_value : ctx.u32_zero_value, index_i);
+                    ctx.OpStore(ptr, is_float ? ctx.OpConvertUToF(ctx.F32[1], comp) : comp);
                 }
             } else {
                 if (i == 0) {
@@ -529,16 +547,23 @@ static void EmitStoreBufferFormatF32xN(EmitContext& ctx, u32 handle, Id address,
                     packed_value =
                         ctx.OpBitFieldInsert(ctx.U32[1], packed_value, comp,
                                              ctx.ConstU32(bit_offset), ctx.ConstU32(bit_width));
+
                 }
 
                 if (i == N - 1) {
-                    ctx.OpStore(ptr, packed_value);
+		    if(is_float)
+		    {
+			Id float_casted = ctx.OpConvertUToF(ctx.F32[1], packed_value);
+			ctx.OpStore(ptr, float_casted);
+		    } else {
+		        ctx.OpStore(ptr, packed_value);
+		    }
                 }
             }
         }
     } break;
     default:
-        UNREACHABLE_MSG("Invalid format for conversion: {}", magic_enum::enum_name(format));
+        UNREACHABLE_MSG("Invalid format for conversion: {} emit N{}", magic_enum::enum_name(format), N);
     }
 }
 
@@ -558,6 +583,18 @@ void EmitStoreBufferFormatF32x3(EmitContext& ctx, IR::Inst* inst, u32 handle, Id
 
 void EmitStoreBufferFormatF32x4(EmitContext& ctx, IR::Inst* inst, u32 handle, Id address,
                                 Id value) {
+    auto ncmp = AmdGpu::NumComponents(ctx.buffers[handle].dfmt);
+    if(ncmp != 4) 
+    {
+        LOG_ERROR(Render_Recompiler, "HACK: called EmitStoreBufferFormatF32x4 on format with {} components, redirecting to x{} function", ncmp, ncmp);
+	if(ncmp == 3)
+		EmitStoreBufferFormatF32xN<3>(ctx, handle, address, value);
+	else if(ncmp == 2)
+		EmitStoreBufferFormatF32xN<2>(ctx, handle, address, value);
+	else if(ncmp == 1)
+		EmitStoreBufferFormatF32xN<1>(ctx, handle, address, value);
+	return;
+    }
     EmitStoreBufferFormatF32xN<4>(ctx, handle, address, value);
 }
 

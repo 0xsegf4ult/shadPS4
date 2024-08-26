@@ -220,7 +220,11 @@ Liverpool::Task Liverpool::ProcessGraphics(std::span<const u32> dcb, std::span<c
             break;
         }
 	case PM4ItOpcode::SetBase: {
-	    LOG_INFO(Render, "called SetBase");
+	    const auto* set_data = reinterpret_cast<const PM4CmdSetBase*>(header);
+	    if(set_data->base_index == PM4CmdSetBase::BaseIndexType::DrawIndexedIndirect_PT)
+		    LOG_INFO(Render, "called SetBase for DrawIndexedIndirect address {:X}", (set_data->address_lo.Value()) | ((set_data->address_hi.Value()) << 16u));
+	    else
+	        LOG_INFO(Render, "called SetBase base_index {:b}", set_data->base_index.Value());
 	    break;
 	}
 	case PM4ItOpcode::DispatchIndirect: {
@@ -228,7 +232,8 @@ Liverpool::Task Liverpool::ProcessGraphics(std::span<const u32> dcb, std::span<c
 	    break;
 	}
 	case PM4ItOpcode::DrawIndirect: {
-	    LOG_INFO(Render, "called DrawIndirect");
+	    const auto* di_data = reinterpret_cast<const PM4CmdDrawIndirect*>(header);
+	    LOG_INFO(Render, "called DrawIndirect data_offset {:X}, base_vtx {:X}, start_inst {:X}", di_data->data_offset, di_data->base_vtx_loc.Value(), di_data->start_inst_loc.Value());
 	    break;
 	}
         case PM4ItOpcode::SetConfigReg: {
