@@ -145,8 +145,16 @@ const GraphicsPipeline* PipelineCache::GetGraphicsPipeline() {
 }
 
 const ComputePipeline* PipelineCache::GetComputePipeline() {
+    const auto* pgm = &liverpool->regs.cs_program;
+    const auto* bininfo = Liverpool::GetBinaryInfo(*pgm);
+    const u64 hash = bininfo->shader_hash;
+    const VAddr pgm_base = pgm->template Address<VAddr>();
+    auto program = program_pool.Create();
+    auto info = MakeShaderInfo(Shader::Stage::Compute, pgm->user_data, pgm_base, hash, liverpool->regs);
+    if(info.pgm_hash == 0x4ca76892)
+	 return nullptr;   
+    
     RefreshComputeKey();
-   
 
     const auto [it, is_new] = compute_pipelines.try_emplace(compute_key);
     if (is_new) {

@@ -94,7 +94,8 @@ public:
 
     explicit TypedValue(const Value& value) : Value(value) {
         if ((value.Type() & type_) == IR::Type::Void) {
-            throw InvalidArgument("Incompatible types {} and {}", type_, value.Type());
+	    UNREACHABLE_MSG("Incompatible types {} and {}", type_, value.Type());
+           // throw InvalidArgument("Incompatible types {} and {}", type_, value.Type());
         }
     }
 
