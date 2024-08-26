@@ -57,6 +57,8 @@ OPCODE(SetAttribute,                                        Void,           Attr
 // Flags
 OPCODE(GetScc,                                             U1,             Void,                                                                            )
 OPCODE(GetExec,                                            U1,             Void,                                                                            )
+OPCODE(GetExecLo,                                          U32,            Void,                                                                            )
+OPCODE(GetExecHi,                                          U32,            Void,                                                                            )
 OPCODE(GetVcc,                                             U1,             Void,                                                                            )
 OPCODE(GetVccLo,                                           U32,            Void,                                                                            )
 OPCODE(GetVccHi,                                           U32,            Void,                                                                            )

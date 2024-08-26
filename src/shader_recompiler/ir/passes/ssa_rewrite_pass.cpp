@@ -30,6 +30,8 @@ struct FlagTag {
 };
 struct SccFlagTag : FlagTag {};
 struct ExecFlagTag : FlagTag {};
+struct ExecLoTag : FlagTag {};
+struct ExecHiTag: FlagTag {};
 struct VccFlagTag : FlagTag {};
 struct VccLoTag : FlagTag {};
 struct VccHiTag : FlagTag {};
@@ -44,7 +46,7 @@ struct GotoVariable : FlagTag {
 };
 
 using Variant = std::variant<IR::ScalarReg, IR::VectorReg, GotoVariable, SccFlagTag, ExecFlagTag,
-                             VccFlagTag, VccLoTag, VccHiTag>;
+                             ExecLoTag, ExecHiTag, VccFlagTag, VccLoTag, VccHiTag>;
 using ValueMap = std::unordered_map<IR::Block*, IR::Value>;
 
 struct DefTable {
@@ -74,6 +76,20 @@ struct DefTable {
     }
     void SetDef(IR::Block* block, SccFlagTag, const IR::Value& value) {
         scc_flag.insert_or_assign(block, value);
+    }
+    
+    const IR::Value& Def(IR::Block* block, ExecLoTag) {
+    	return exec_lo_flag[block];
+    }
+    void SetDef(IR::Block* block, ExecLoTag, const IR::Value& value) {
+        exec_lo_flag.insert_or_assign(block, value);
+    }
+
+    const IR::Value& Def(IR::Block* block, ExecHiTag) {
+	return exec_hi_flag[block];
+    }
+    void SetDef(IR::Block* block, ExecHiTag, const IR::Value& value) {
+	exec_hi_flag.insert_or_assign(block, value);
     }
 
     const IR::Value& Def(IR::Block* block, ExecFlagTag) {
@@ -107,6 +123,8 @@ struct DefTable {
     std::unordered_map<u32, ValueMap> goto_vars;
     ValueMap scc_flag;
     ValueMap exec_flag;
+    ValueMap exec_lo_flag;
+    ValueMap exec_hi_flag;
     ValueMap vcc_flag;
     ValueMap scc_lo_flag;
     ValueMap vcc_lo_flag;
@@ -126,6 +144,14 @@ IR::Opcode UndefOpcode(const VccLoTag) noexcept {
 }
 
 IR::Opcode UndefOpcode(const VccHiTag) noexcept {
+    return IR::Opcode::UndefU32;
+}
+
+IR::Opcode UndefOpcode(const ExecLoTag) noexcept {
+    return IR::Opcode::UndefU32;
+}
+
+IR::Opcode UndefOpcode(const ExecHiTag) noexcept {
     return IR::Opcode::UndefU32;
 }
 
@@ -350,6 +376,12 @@ void VisitInst(Pass& pass, IR::Block* block, IR::Inst& inst) {
     case IR::Opcode::GetExec:
         inst.ReplaceUsesWith(pass.ReadVariable(ExecFlagTag{}, block));
         break;
+    case IR::Opcode::GetExecLo:
+	inst.ReplaceUsesWith(pass.ReadVariable(ExecLoTag{}, block));
+	break;
+    case IR::Opcode::GetExecHi:
+	inst.ReplaceUsesWith(pass.ReadVariable(ExecHiTag{}, block));
+	break;
     case IR::Opcode::GetScc:
         inst.ReplaceUsesWith(pass.ReadVariable(SccFlagTag{}, block));
         break;
