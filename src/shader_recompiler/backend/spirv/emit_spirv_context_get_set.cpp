@@ -497,6 +497,7 @@ static void EmitStoreBufferFormatF32xN(EmitContext& ctx, u32 handle, Id address,
     case AmdGpu::DataFormat::Format16_16_16_16:
     case AmdGpu::DataFormat::Format10_11_11:
     case AmdGpu::DataFormat::Format16_16:
+    case AmdGpu::DataFormat::Format32_32_32:
 	LOG_INFO(Render_Recompiler, "number format is {}", magic_enum::enum_name(num_format));
     case AmdGpu::DataFormat::Format8_8_8_8:
     case AmdGpu::DataFormat::Format16:
