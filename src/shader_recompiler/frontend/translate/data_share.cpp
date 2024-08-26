@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "shader_recompiler/frontend/translate/translate.h"
+#include "common/logging/log.h"
 
 namespace Shader::Gcn {
 
@@ -43,6 +44,9 @@ void Translator::EmitDataShare(const GcnInst& inst) {
         return DS_MIN_U32(inst, false, true);
     case Opcode::DS_MAX_RTN_U32:
         return DS_MAX_U32(inst, false, true);
+    case Opcode::DS_APPEND:
+	 LOG_ERROR(Render_Recompiler, "Called DS_APPEND");
+	 return;
     default:
         LogMissingOpcode(inst);
     }

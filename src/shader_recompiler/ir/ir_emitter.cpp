@@ -6,6 +6,7 @@
 #include "shader_recompiler/exception.h"
 #include "shader_recompiler/ir/ir_emitter.h"
 #include "shader_recompiler/ir/value.h"
+#include "common/logging/log.h"
 
 namespace Shader::IR {
 namespace {
@@ -551,6 +552,11 @@ Value IREmitter::CompositeExtract(const Value& vector, size_t element) {
         return Inst(opcode, vector, Value{static_cast<u32>(element)});
     }};
     switch (vector.Type()) {
+    case Type::U32:
+    case Type::F32:
+    case Type::F16:
+        LOG_ERROR(Render_Recompiler, "Used CompositeExtract on single element");
+	return vector;
     case Type::U32x2:
         return read(Opcode::CompositeExtractU32x2, 2);
     case Type::U32x3:
