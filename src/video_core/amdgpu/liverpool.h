@@ -1038,6 +1038,17 @@ struct Liverpool {
     std::array<CbDbExtent, NumColorBuffers> last_cb_extent{};
     CbDbExtent last_db_extent{};
 
+    struct DrawIndirectBuffer {
+        u64 address;
+	u32 data_offset;
+	u16 base_vtx;
+	u16 start_inst;
+
+	VAddr GetAddress() const {
+		return address << 8;
+	}
+    };
+    DrawIndirectBuffer dib{};    
 public:
     Liverpool();
     ~Liverpool();

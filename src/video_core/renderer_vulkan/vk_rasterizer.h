@@ -32,6 +32,7 @@ public:
     }
 
     void Draw(bool is_indexed, u32 index_offset = 0);
+    void DrawIndirect(bool is_indexed);
 
     void DispatchDirect();
 

@@ -222,7 +222,11 @@ Liverpool::Task Liverpool::ProcessGraphics(std::span<const u32> dcb, std::span<c
 	case PM4ItOpcode::SetBase: {
 	    const auto* set_data = reinterpret_cast<const PM4CmdSetBase*>(header);
 	    if(set_data->base_index == PM4CmdSetBase::BaseIndexType::DrawIndexedIndirect_PT)
-		    LOG_INFO(Render, "called SetBase for DrawIndexedIndirect address {:X}", (set_data->address_lo.Value()) | ((set_data->address_hi.Value()) << 16u));
+	    {
+		    u64 addr = u64(set_data->address_lo.Value()) | (u64(set_data->address_hi.Value()) << 32u);
+		    LOG_INFO(Render, "called SetBase for DrawIndexedIndirect address {:#x}", addr);
+		    dib.address = addr;
+	    }
 	    else
 	        LOG_INFO(Render, "called SetBase base_index {:b}", set_data->base_index.Value());
 	    break;
@@ -233,7 +237,18 @@ Liverpool::Task Liverpool::ProcessGraphics(std::span<const u32> dcb, std::span<c
 	}
 	case PM4ItOpcode::DrawIndirect: {
 	    const auto* di_data = reinterpret_cast<const PM4CmdDrawIndirect*>(header);
-	    LOG_INFO(Render, "called DrawIndirect data_offset {:X}, base_vtx {:X}, start_inst {:X}", di_data->data_offset, di_data->base_vtx_loc.Value(), di_data->start_inst_loc.Value());
+	    LOG_INFO(Render, "called DrawIndirect data_offset {:#x}, base_vtx {:#x}, start_inst {:#x}", di_data->data_offset, di_data->base_vtx_loc.Value(), di_data->start_inst_loc.Value());
+	    dib.data_offset = di_data->data_offset;
+	    dib.base_vtx = di_data->base_vtx_loc.Value();
+	    dib.start_inst = di_data->start_inst_loc.Value();
+	    regs.draw_initiator = di_data->draw_initiator.raw;
+            if (rasterizer) {
+                const auto cmd_address = reinterpret_cast<const void*>(header);
+                rasterizer->ScopeMarkerBegin(fmt::format("dcb:{}:DrawIndirect", cmd_address));
+                rasterizer->Breadcrumb(u64(cmd_address));
+                rasterizer->DrawIndirect(false);
+                rasterizer->ScopeMarkerEnd();
+            }
 	    break;
 	}
         case PM4ItOpcode::SetConfigReg: {

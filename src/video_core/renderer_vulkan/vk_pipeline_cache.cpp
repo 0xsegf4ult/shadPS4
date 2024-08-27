@@ -285,13 +285,17 @@ vk::ShaderModule PipelineCache::CompileModule(Shader::Info& info, std::span<cons
 
     block_pool.ReleaseContents();
     inst_pool.ReleaseContents();
+    if(Config::dumpShaders()) {
+        const u64 key = info.GetStageSpecializedKey(binding);
+	DumpShader(code, key, info.stage, perm_idx, "bin");
+    }
     const auto ir_program = Shader::TranslateProgram(inst_pool, block_pool, code, info, profile);
 
     // Compile IR to SPIR-V
     const u64 key = info.GetStageSpecializedKey(binding);
     const auto spv = Shader::Backend::SPIRV::EmitSPIRV(profile, ir_program, binding);
     if (Config::dumpShaders()) {
-        DumpShader(spv, key, info.stage, perm_idx, "spv");
+	DumpShader(spv, key, info.stage, perm_idx, "spv");
     }
 
     // Create module and set name to hash in renderdoc

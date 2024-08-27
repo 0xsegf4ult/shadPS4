@@ -170,7 +170,7 @@ T Translator::GetSrc(const InstOperand& operand) {
             return m0_value;
         }
     default:
-        UNREACHABLE();
+        UNREACHABLE_MSG("Unknown operand field {}", u32(operand.field));
     }
 
     if constexpr (is_float) {

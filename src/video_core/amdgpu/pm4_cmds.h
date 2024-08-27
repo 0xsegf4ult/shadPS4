@@ -284,6 +284,14 @@ struct PM4CmdDrawIndexAuto {
     u32 draw_initiator;
 };
 
+union DrawInitiator {
+    u32 raw;
+    BitField<0, 2, u32> input_source;
+    BitField<2, 2, u32> major_mode;
+    BitField<5, 1, u32> not_eop;
+    BitField<6, 1, u32> use_opaque;
+};
+
 struct PM4CmdDrawIndirect {
     PM4Type3Header header; ///< header
     u32 data_offset;       ///< DWORD aligned offset
@@ -295,7 +303,7 @@ struct PM4CmdDrawIndirect {
         u32 dw3;
         BitField<0, 16, u32> start_inst_loc; ///< start instance location
     };
-    u32 draw_initiator; ///< Draw Initiator Register
+    DrawInitiator draw_initiator; ///< Draw Initiator Register
 };
 
 enum class DataSelect : u32 {

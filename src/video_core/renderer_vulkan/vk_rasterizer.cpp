@@ -11,6 +11,7 @@
 #include "video_core/texture_cache/image_view.h"
 #include "video_core/texture_cache/texture_cache.h"
 #include "vk_rasterizer.h"
+#include "common/logging/log.h"
 
 namespace Vulkan {
 
@@ -64,6 +65,42 @@ void Rasterizer::Draw(bool is_indexed, u32 index_offset) {
         cmdbuf.draw(num_vertices, regs.num_instances.NumInstances(), vertex_offset,
                     instance_offset);
     }
+}
+
+void Rasterizer::DrawIndirect(bool is_indexed) {
+	RENDERER_TRACE;
+
+	const auto cmdbuf = scheduler.CommandBuffer();
+	const auto& regs = liverpool->regs;
+	const auto& ib = liverpool->dib;
+	const GraphicsPipeline* pipeline = pipeline_cache.GetGraphicsPipeline();
+	if(!pipeline) {
+		return;
+	}
+
+	try {
+		pipeline->BindResources(regs, buffer_cache, texture_cache);
+	} catch (...) {
+		UNREACHABLE();
+	}
+
+	const auto& vs_info = pipeline->GetStage(Shader::Stage::Vertex);
+	buffer_cache.BindVertexBuffers(vs_info);
+	const u32 num_indices = buffer_cache.BindIndexBuffer(is_indexed, 0);
+	
+	BeginRendering();
+	UpdateDynamicState(*pipeline);
+	
+	if(is_indexed) {
+	    UNREACHABLE();
+	} else {
+	    //holy shit
+	    auto ibuf = buffer_cache.ObtainBuffer((ib.address + ib.data_offset) << 8, sizeof(vk::DrawIndirectCommand), true);
+	    if(!ibuf.first || ibuf.first->Handle() == VK_NULL_HANDLE)
+		UNREACHABLE_MSG("Failed to find indirect buffer");
+
+	    cmdbuf.drawIndirect(ibuf.first->Handle(), 0u, 1u, sizeof(vk::DrawIndirectCommand));
+	}
 }
 
 void Rasterizer::DispatchDirect() {
