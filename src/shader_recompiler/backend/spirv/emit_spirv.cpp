@@ -12,6 +12,7 @@
 #include "shader_recompiler/frontend/translate/translate.h"
 #include "shader_recompiler/ir/basic_block.h"
 #include "shader_recompiler/ir/program.h"
+#include "common/logging/log.h"
 
 namespace Shader::Backend::SPIRV {
 namespace {
@@ -181,7 +182,8 @@ void DefineEntryPoint(const IR::Program& program, EmitContext& ctx, Id main) {
     ctx.AddCapability(spv::Capability::Sampled1D);
     ctx.AddCapability(spv::Capability::ImageQuery);
     if (info.uses_fp16) {
-        ctx.AddCapability(spv::Capability::Float16);
+	LOG_ERROR(Render_Recompiler, "Trying to enable capability Float16");
+        //ctx.AddCapability(spv::Capability::Float16);
         ctx.AddCapability(spv::Capability::Int16);
     }
     ctx.AddCapability(spv::Capability::Int64);
