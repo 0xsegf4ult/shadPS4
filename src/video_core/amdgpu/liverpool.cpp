@@ -232,7 +232,16 @@ Liverpool::Task Liverpool::ProcessGraphics(std::span<const u32> dcb, std::span<c
 	    break;
 	}
 	case PM4ItOpcode::DispatchIndirect: {
-	    LOG_INFO(Render, "called DispatchIndirect");
+	    const auto* di_data = reinterpret_cast<const PM4CmdDispatchIndirect*>(header);
+	    LOG_INFO(Render, "called DispatchIndirect data_offset {:#x}", di_data->data_offset);
+	    regs.cs_program.dispatch_initiator = di_data->dispatch_initiator;
+	    if (rasterizer && (regs.cs_program.dispatch_initiator & 1)) {
+	        const auto cmd_address = reinterpret_cast<const void*>(header);
+		rasterizer->ScopeMarkerBegin(fmt::format("dcb:{}:DispatchIndirect", cmd_address));
+		rasterizer->Breadcrumb(u64(cmd_address));
+		rasterizer->DispatchIndirect();
+		rasterizer->ScopeMarkerEnd();
+            }
 	    break;
 	}
 	case PM4ItOpcode::DrawIndirect: {

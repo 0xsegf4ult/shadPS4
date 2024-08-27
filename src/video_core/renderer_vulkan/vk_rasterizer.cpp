@@ -127,6 +127,35 @@ void Rasterizer::DispatchDirect() {
     cmdbuf.dispatch(cs_program.dim_x, cs_program.dim_y, cs_program.dim_z);
 }
 
+void Rasterizer::DispatchIndirect() {
+	RENDERER_TRACE;
+
+	const auto& cmdbuf = scheduler.CommandBuffer();
+	const auto& cs_program = liverpool->regs.cs_program;
+	const ComputePipeline* pipeline = pipeline_cache.GetComputePipeline();
+	if(!pipeline) {
+		return;
+	}
+
+	try {
+		const auto has_resources = pipeline->BindResources(buffer_cache, texture_cache);
+		if (!has_resources) {
+			return;
+		}
+	} catch (...) {
+		UNREACHABLE();
+	}
+	    
+	const auto& ib = liverpool->dib;
+	auto ibuf = buffer_cache.ObtainBuffer((ib.address + ib.data_offset) << 8, sizeof(vk::DispatchIndirectCommand), true);
+	if(!ibuf.first || ibuf.first->Handle() == VK_NULL_HANDLE)
+		UNREACHABLE_MSG("Failed to find indirect buffer");
+
+	scheduler.EndRendering();
+	cmdbuf.bindPipeline(vk::PipelineBindPoint::eCompute, pipeline->Handle());
+	cmdbuf.dispatchIndirect(ibuf.first->Handle(), 0u);
+}
+
 u64 Rasterizer::Flush() {
     const u64 current_tick = scheduler.CurrentTick();
     SubmitInfo info{};

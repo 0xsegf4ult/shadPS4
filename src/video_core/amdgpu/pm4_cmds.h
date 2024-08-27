@@ -306,6 +306,12 @@ struct PM4CmdDrawIndirect {
     DrawInitiator draw_initiator; ///< Draw Initiator Register
 };
 
+struct PM4CmdDispatchIndirect {
+    PM4Type3Header header;
+    u32 data_offset;
+    u32 dispatch_initiator;
+};
+
 enum class DataSelect : u32 {
     None = 0,
     Data32Low = 1,

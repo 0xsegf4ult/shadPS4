@@ -35,6 +35,7 @@ public:
     void DrawIndirect(bool is_indexed);
 
     void DispatchDirect();
+    void DispatchIndirect();
 
     void ScopeMarkerBegin(const std::string_view& str);
     void ScopeMarkerEnd();
