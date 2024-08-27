@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "shader_recompiler/frontend/translate/translate.h"
+#include "common/logging/log.h"
 
 namespace Shader::Gcn {
 
@@ -94,8 +95,12 @@ void Translator::EmitVectorMemory(const GcnInst& inst) {
 
     case Opcode::TBUFFER_STORE_FORMAT_X:
         return BUFFER_STORE(1, true, inst);
+    case Opcode::TBUFFER_STORE_FORMAT_XY:
+	return BUFFER_STORE(2, true, inst);
     case Opcode::TBUFFER_STORE_FORMAT_XYZ:
         return BUFFER_STORE(3, true, inst);
+    case Opcode::TBUFFER_STORE_FORMAT_XYZW:
+	return BUFFER_STORE(4, true, inst);
 
     case Opcode::BUFFER_STORE_DWORD:
         return BUFFER_STORE(1, false, inst);
@@ -361,7 +366,9 @@ void Translator::BUFFER_LOAD(u32 num_dwords, bool is_typed, const GcnInst& inst)
         return {};
     }();
     const IR::Value soffset{GetSrc(inst.src[3])};
-    ASSERT_MSG(soffset.IsImmediate() && soffset.U32() == 0, "Non immediate offset not supported");
+    if(!soffset.IsImmediate() || soffset.U32() != 0)
+	    LOG_ERROR(Render_Recompiler, "Non immediate offset not supported");
+    //ASSERT_MSG(soffset.IsImmediate() && soffset.U32() == 0, "Non immediate offset not supported");
 
     IR::BufferInstInfo info{};
     info.index_enable.Assign(mtbuf.idxen);
@@ -431,7 +438,9 @@ void Translator::BUFFER_STORE(u32 num_dwords, bool is_typed, const GcnInst& inst
         return {};
     }();
     const IR::Value soffset{GetSrc(inst.src[3])};
-    ASSERT_MSG(soffset.IsImmediate() && soffset.U32() == 0, "Non immediate offset not supported");
+    if(!soffset.IsImmediate() || soffset.U32() != 0)
+	    LOG_ERROR(Render_Recompiler, "Non immediate offset not supported");
+    //ASSERT_MSG(soffset.IsImmediate() && soffset.U32() == 0, "Non immediate offset not supported");
 
     IR::BufferInstInfo info{};
     info.index_enable.Assign(mtbuf.idxen);
