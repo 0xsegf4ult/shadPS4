@@ -164,7 +164,7 @@ bool Instance::CreateDevice() {
         vk::PhysicalDeviceColorWriteEnableFeaturesEXT, vk::PhysicalDeviceVulkan12Features,
         vk::PhysicalDeviceVulkan13Features,
         vk::PhysicalDeviceWorkgroupMemoryExplicitLayoutFeaturesKHR,
-        vk::PhysicalDeviceDepthClipControlFeaturesEXT, vk::PhysicalDeviceRobustness2FeaturesEXT,
+        vk::PhysicalDeviceDepthClipControlFeaturesEXT, vk::PhysicalDeviceRobustness2FeaturesEXT, vk::PhysicalDeviceShaderAtomicFloatFeaturesEXT,
         vk::PhysicalDevicePortabilitySubsetFeaturesKHR>();
     const vk::StructureChain properties_chain = physical_device.getProperties2<
         vk::PhysicalDeviceProperties2, vk::PhysicalDevicePortabilitySubsetPropertiesKHR,
@@ -336,6 +336,12 @@ bool Instance::CreateDevice() {
         vk::PhysicalDevicePrimitiveTopologyListRestartFeaturesEXT{
             .primitiveTopologyListRestart = true,
         },
+	vk::PhysicalDeviceShaderAtomicFloatFeaturesEXT{
+	    .shaderBufferFloat32Atomics = true,
+	    .shaderBufferFloat32AtomicAdd = true,
+	    .shaderBufferFloat64Atomics = true,
+	    .shaderBufferFloat64AtomicAdd = true,
+	},
 #ifdef __APPLE__
         feature_chain.get<vk::PhysicalDevicePortabilitySubsetFeaturesKHR>(),
 #endif
