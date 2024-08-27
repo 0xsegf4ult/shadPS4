@@ -31,7 +31,6 @@ public:
     bool BindResources(VideoCore::BufferCache& buffer_cache,
                        VideoCore::TextureCache& texture_cache) const;
 
-private:
     const Instance& instance;
     Scheduler& scheduler;
     vk::UniquePipeline pipeline;

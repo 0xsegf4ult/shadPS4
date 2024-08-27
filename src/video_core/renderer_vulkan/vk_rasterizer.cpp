@@ -39,6 +39,10 @@ void Rasterizer::Draw(bool is_indexed, u32 index_offset) {
         return;
     }
 
+    const auto& hashes = pipeline->stages;
+    LOG_INFO(Render_Vulkan, "bound gfx_pipe stage hashes: FS {:#x} | VS {:#x} | GS {:#x} | ES {:#x} | HS {:#x}", 
+		    hashes[0] ? hashes[0]->pgm_hash : 0  , hashes[1] ? hashes[1]->pgm_hash : 0, hashes[2] ? hashes[2]->pgm_hash : 0, hashes[3] ? hashes[3]->pgm_hash : 0, hashes[4] ? hashes[4]->pgm_hash : 0);
+
     try {
         pipeline->BindResources(regs, buffer_cache, texture_cache);
     } catch (...) {
@@ -75,6 +79,8 @@ void Rasterizer::DispatchDirect() {
     if (!pipeline) {
         return;
     }
+
+    LOG_INFO(Render_Vulkan, "bound compute pipe hash {:#x}", pipeline->info->pgm_hash);
 
     try {
         const auto has_resources = pipeline->BindResources(buffer_cache, texture_cache);
