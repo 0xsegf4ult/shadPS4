@@ -1074,7 +1074,7 @@ ScePthread PThreadPool::Create() {
     static u8* hint_address = reinterpret_cast<u8*>(0x7FFFFC000ULL);
     auto* ret = reinterpret_cast<PthreadInternal*>(
     mmap(hint_address, sizeof(PthreadInternal), PROT_READ | PROT_WRITE,
-             MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0));
+	    MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0));
     hint_address += Common::AlignUp(sizeof(PthreadInternal), 4_KB);
 #endif
     ret->is_free = false;
