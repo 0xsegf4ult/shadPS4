@@ -91,10 +91,8 @@ public:
         return key.depth.depth_enable.Value();
     }
 
-private:
     void BuildDescSetLayout();
 
-private:
     const Instance& instance;
     Scheduler& scheduler;
     vk::UniquePipeline pipeline;
