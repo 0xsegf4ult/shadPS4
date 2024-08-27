@@ -283,6 +283,10 @@ vk::ShaderModule PipelineCache::CompileModule(Shader::Info& info, std::span<cons
     LOG_INFO(Render_Vulkan, "Compiling {} shader {:#x} {}", info.stage, info.pgm_hash,
              perm_idx != 0 ? "(permutation)" : "");
 
+    if (Config::dumpShaders()) {
+        DumpShader(code, info.pgm_hash, info.stage, perm_idx, "bin");
+    }
+
     block_pool.ReleaseContents();
     inst_pool.ReleaseContents();
     if(Config::dumpShaders()) {
@@ -295,7 +299,7 @@ vk::ShaderModule PipelineCache::CompileModule(Shader::Info& info, std::span<cons
     const u64 key = info.GetStageSpecializedKey(binding);
     const auto spv = Shader::Backend::SPIRV::EmitSPIRV(profile, ir_program, binding);
     if (Config::dumpShaders()) {
-	DumpShader(spv, key, info.stage, perm_idx, "spv");
+        DumpShader(spv, info.pgm_hash, info.stage, perm_idx, "spv");
     }
 
     // Create module and set name to hash in renderdoc
