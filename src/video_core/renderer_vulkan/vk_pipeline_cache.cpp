@@ -118,7 +118,7 @@ PipelineCache::PipelineCache(const Instance& instance_, Scheduler& scheduler_,
 }
 
 const GraphicsPipeline* PipelineCache::GetGraphicsPipeline() {
-    const auto& regs = liverpool->regs;
+    auto& regs = liverpool->regs;
     // Tessellation is unsupported so skip the draw to avoid locking up the driver.
     if (regs.primitive_type == Liverpool::PrimitiveType::PatchPrimitive) {
         return nullptr;
@@ -134,6 +134,37 @@ const GraphicsPipeline* PipelineCache::GetGraphicsPipeline() {
         LOG_TRACE(Render_Vulkan, "FMask decompression pass skipped");
         return nullptr;
     }
+
+    for(u32 i = 0; i < MaxShaderStages; i++)
+    {
+	if(!regs.stage_enable.IsStageEnabled(i)) {
+	    continue;
+	}
+
+	if(Shader::Stage{i} == Shader::Stage::Geometry)
+	{
+		LOG_TRACE(Render_Vulkan, "GS skipped");
+		return nullptr;
+	}
+
+	auto* pgm = regs.ProgramForStage(i);
+        if (!pgm || !pgm->Address<u32*>()) {
+	    continue;
+	}
+	const auto* bininfo = Liverpool::GetBinaryInfo(*pgm);
+	if(!bininfo->Valid()) {
+	    continue;
+	}
+	
+	const u64 hash = bininfo->shader_hash;
+	const VAddr pgm_base = pgm->template Address<VAddr>();
+	auto info = MakeShaderInfo(Shader::Stage{i}, pgm->user_data, pgm_base, hash, liverpool->regs);
+	if(info.pgm_hash == 0x8e3f8dc4)
+	{
+		return nullptr;	
+	}
+    };
+
     RefreshGraphicsKey();
     const auto [it, is_new] = graphics_pipelines.try_emplace(graphics_key);
     if (is_new) {
@@ -149,10 +180,10 @@ const ComputePipeline* PipelineCache::GetComputePipeline() {
     const auto* bininfo = Liverpool::GetBinaryInfo(*pgm);
     const u64 hash = bininfo->shader_hash;
     const VAddr pgm_base = pgm->template Address<VAddr>();
-    auto program = program_pool.Create();
     auto info = MakeShaderInfo(Shader::Stage::Compute, pgm->user_data, pgm_base, hash, liverpool->regs);
-    if(info.pgm_hash == 0x4ca76892)
-	 return nullptr;   
+    if(info.pgm_hash == 0x4ca76892 || // DS_APPEND , broken code
+       info.pgm_hash == 0x2da7fe60) // DS_APPEND, DS_CONSUME, S_CBRANCH_EXECNZ, S_MAX_I32, V_MAX3_I32, TBUFFER_STORE_FORMAT_XYZW? 
+	return nullptr;   
     
     RefreshComputeKey();
 

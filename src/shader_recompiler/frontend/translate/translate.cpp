@@ -454,7 +454,7 @@ void Translator::EmitFlowControl(u32 pc, const GcnInst& inst) {
     case Opcode::S_BRANCH:
         return;
     default:
-        UNREACHABLE();
+	LogMissingOpcode(inst);
     }
 }
 
