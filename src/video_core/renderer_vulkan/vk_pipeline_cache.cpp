@@ -182,8 +182,9 @@ const ComputePipeline* PipelineCache::GetComputePipeline() {
     const VAddr pgm_base = pgm->template Address<VAddr>();
     auto info = MakeShaderInfo(Shader::Stage::Compute, pgm->user_data, pgm_base, hash, liverpool->regs);
     if(info.pgm_hash == 0x4ca76892 || // DS_APPEND , broken code
-       info.pgm_hash == 0x2da7fe60// || // DS_APPEND, DS_CONSUME, S_CBRANCH_EXECNZ, S_MAX_I32, V_MAX3_I32, TBUFFER_STORE_FORMAT_XYZW? 
-      ) // devicelost?	
+       info.pgm_hash == 0x2da7fe60 || // DS_APPEND, DS_CONSUME, S_CBRANCH_EXECNZ, S_MAX_I32, V_MAX3_I32, TBUFFER_STORE_FORMAT_XYZW? 
+       info.pgm_hash == 0x1f2b3c9e || // devicelost? has infinite loop with break condition	
+       info.pgm_hash == 0xfefebf9f) // last cmd before last submit
        return nullptr;   
     
     RefreshComputeKey();

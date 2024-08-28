@@ -6,6 +6,7 @@
 #include "common/debug.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
 #include "video_core/renderer_vulkan/vk_scheduler.h"
+#include "common/logging/log.h"
 
 namespace Vulkan {
 
@@ -190,6 +191,7 @@ void Scheduler::SubmitExecution(SubmitInfo& info) {
     };
 
     try {
+    	LOG_INFO(Render_Vulkan, "called vkQueueSubmit fence {}", reinterpret_cast<u64>(static_cast<VkFence>(info.fence)));
         instance.GetGraphicsQueue().submit(submit_info, info.fence);
     } catch (vk::DeviceLostError& err) {
         if (instance.HasNvCheckpoints()) {
