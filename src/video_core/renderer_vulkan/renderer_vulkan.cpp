@@ -365,7 +365,20 @@ Frame* RendererVulkan::GetRenderFrame() {
     vk::Result result{};
 
     const auto wait = [&]() {
-        result = device.waitForFences(frame->present_done, false, std::numeric_limits<u64>::max());
+    	LOG_INFO(Render_Vulkan, "called vkDeviceWaitForFences fence {}", reinterpret_cast<u64>(static_cast<VkFence>(frame->present_done)));
+        try {
+	    result = device.waitForFences(frame->present_done, false, std::numeric_limits<u64>::max());
+	} catch (vk::DeviceLostError& err) {
+	    if (instance.HasNvCheckpoints()) {
+		const auto checkpoint_data = instance.GetGraphicsQueue().getCheckpointData2NV();
+		for (const auto& cp : checkpoint_data) {
+		    LOG_CRITICAL(Render_Vulkan, "{}: {:#x}", vk::to_string(cp.stage), 
+				    reinterpret_cast<u64>(cp.pCheckpointMarker));
+		}
+	    }
+	    UNREACHABLE_MSG("Device lost during fence wait: {}", err.what());
+	}
+	
         return result;
     };
 
