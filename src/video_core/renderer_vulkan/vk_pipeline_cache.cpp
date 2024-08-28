@@ -332,6 +332,7 @@ vk::ShaderModule PipelineCache::CompileModule(Shader::Info& info, std::span<cons
     }
 
     // Create module and set name to hash in renderdoc
+    const u64 key = info.GetStageSpecializedKey(binding);
     const auto module = CompileSPV(spv, instance.GetDevice());
     ASSERT(module != VK_NULL_HANDLE);
     const auto name = fmt::format("{}_{:#x}_{}", info.stage, key, perm_idx);
