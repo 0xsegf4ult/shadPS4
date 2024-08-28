@@ -41,8 +41,14 @@ void Rasterizer::Draw(bool is_indexed, u32 index_offset) {
     }
 
     const auto& hashes = pipeline->stages;
-    LOG_INFO(Render_Vulkan, "bound gfx_pipe stage hashes: FS {:#x} | VS {:#x} | GS {:#x} | ES {:#x} | HS {:#x}", 
-		    hashes[0] ? hashes[0]->pgm_hash : 0  , hashes[1] ? hashes[1]->pgm_hash : 0, hashes[2] ? hashes[2]->pgm_hash : 0, hashes[3] ? hashes[3]->pgm_hash : 0, hashes[4] ? hashes[4]->pgm_hash : 0);
+    auto fh = hashes[0] ? hashes[0]->pgm_hash : 0;
+    auto vh = hashes[1] ? hashes[1]->pgm_hash : 0;
+    if(last_fs_hash != fh || last_vs_hash != vh)
+    {
+	LOG_INFO(Render_Vulkan, "bound gfx_pipe stage hashes: FS {:#x} | VS {:#x}", fh, vh);
+	last_fs_hash = fh;
+	last_vs_hash = vh;
+    }
 
     try {
         pipeline->BindResources(regs, buffer_cache, texture_cache);
@@ -82,8 +88,14 @@ void Rasterizer::DrawIndirect(bool is_indexed) {
 		return;
 	}
     const auto& hashes = pipeline->stages;
-    LOG_INFO(Render_Vulkan, "bound gfx_pipe stage hashes: FS {:#x} | VS {:#x} | GS {:#x} | ES {:#x} | HS {:#x}", 
-		    hashes[0] ? hashes[0]->pgm_hash : 0  , hashes[1] ? hashes[1]->pgm_hash : 0, hashes[2] ? hashes[2]->pgm_hash : 0, hashes[3] ? hashes[3]->pgm_hash : 0, hashes[4] ? hashes[4]->pgm_hash : 0);
+    auto fh = hashes[0] ? hashes[0]->pgm_hash : 0;
+    auto vh = hashes[1] ? hashes[1]->pgm_hash : 0;
+    if(last_fs_hash != fh || last_vs_hash != vh)
+    {
+	//LOG_INFO(Render_Vulkan, "bound gfx_pipe stage hashes: FS {:#x} | VS {:#x}", fh, vh);
+	last_fs_hash = fh;
+	last_vs_hash = vh;
+    }
 
 	try {
 		pipeline->BindResources(regs, buffer_cache, texture_cache);
@@ -120,7 +132,11 @@ void Rasterizer::DispatchDirect() {
         return;
     }
 
-    LOG_INFO(Render_Vulkan, "bound compute pipe hash {:#x}", pipeline->info->pgm_hash);
+    if(pipeline->info->pgm_hash != last_cs_hash)
+    {
+	//    LOG_INFO(Render_Vulkan, "bound compute pipe hash {:#x}", pipeline->info->pgm_hash);
+	    last_cs_hash = pipeline->info->pgm_hash;
+    }
 
     try {
         const auto has_resources = pipeline->BindResources(buffer_cache, texture_cache);
@@ -146,7 +162,11 @@ void Rasterizer::DispatchIndirect() {
 		return;
 	}
 
-	LOG_INFO(Render_Vulkan, "bound compute pipe hash {:#x}", pipeline->info->pgm_hash);
+    if(pipeline->info->pgm_hash != last_cs_hash)
+    {
+	    LOG_INFO(Render_Vulkan, "bound compute pipe hash {:#x}", pipeline->info->pgm_hash);
+	    last_cs_hash = pipeline->info->pgm_hash;
+    }
 
 	try {
 		const auto has_resources = pipeline->BindResources(buffer_cache, texture_cache);

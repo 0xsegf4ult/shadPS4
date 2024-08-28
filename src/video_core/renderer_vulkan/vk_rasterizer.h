@@ -56,6 +56,10 @@ private:
     void UpdateDepthStencilState();
 
 private:
+    u64 last_vs_hash = 0;
+    u64 last_fs_hash = 0;
+    u64 last_cs_hash = 0;
+    
     const Instance& instance;
     Scheduler& scheduler;
     VideoCore::PageManager page_manager;

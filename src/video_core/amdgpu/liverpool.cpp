@@ -237,10 +237,10 @@ Liverpool::Task Liverpool::ProcessGraphics(std::span<const u32> dcb, std::span<c
 	    regs.cs_program.dispatch_initiator = di_data->dispatch_initiator;
 	    if (rasterizer && (regs.cs_program.dispatch_initiator & 1)) {
 	        const auto cmd_address = reinterpret_cast<const void*>(header);
-		rasterizer->ScopeMarkerBegin(fmt::format("dcb:{}:DispatchIndirect", cmd_address));
-		rasterizer->Breadcrumb(u64(cmd_address));
-		rasterizer->DispatchIndirect();
-		rasterizer->ScopeMarkerEnd();
+	//	rasterizer->ScopeMarkerBegin(fmt::format("dcb:{}:DispatchIndirect", cmd_address));
+	//	rasterizer->Breadcrumb(u64(cmd_address));
+	//	rasterizer->DispatchIndirect();
+	//	rasterizer->ScopeMarkerEnd();
             }
 	    break;
 	}
@@ -253,10 +253,10 @@ Liverpool::Task Liverpool::ProcessGraphics(std::span<const u32> dcb, std::span<c
 	    regs.draw_initiator = di_data->draw_initiator.raw;
             if (rasterizer) {
                 const auto cmd_address = reinterpret_cast<const void*>(header);
-                rasterizer->ScopeMarkerBegin(fmt::format("dcb:{}:DrawIndirect", cmd_address));
-                rasterizer->Breadcrumb(u64(cmd_address));
-                rasterizer->DrawIndirect(false);
-                rasterizer->ScopeMarkerEnd();
+          //      rasterizer->ScopeMarkerBegin(fmt::format("dcb:{}:DrawIndirect", cmd_address));
+            //    rasterizer->Breadcrumb(u64(cmd_address));
+              //  rasterizer->DrawIndirect(false);
+                //rasterizer->ScopeMarkerEnd();
             }
 	    break;
 	}
