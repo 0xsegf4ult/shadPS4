@@ -159,7 +159,7 @@ const GraphicsPipeline* PipelineCache::GetGraphicsPipeline() {
 	const u64 hash = bininfo->shader_hash;
 	const VAddr pgm_base = pgm->template Address<VAddr>();
 	auto info = MakeShaderInfo(Shader::Stage{i}, pgm->user_data, pgm_base, hash, liverpool->regs);
-	if(info.pgm_hash == 0x32daf20123)  // deviceLost FS
+	if(info.pgm_hash == 0x3e5808f9 || info.pgm_hash == 0xf61fd27)  // deviceLost FS
 	{
 		return nullptr;	
 	}
@@ -183,8 +183,11 @@ const ComputePipeline* PipelineCache::GetComputePipeline() {
     auto info = MakeShaderInfo(Shader::Stage::Compute, pgm->user_data, pgm_base, hash, liverpool->regs);
     if(info.pgm_hash == 0x4ca76892 || // DS_APPEND , broken code
        info.pgm_hash == 0x2da7fe60 || // DS_APPEND, DS_CONSUME, S_CBRANCH_EXECNZ, S_MAX_I32, V_MAX3_I32, TBUFFER_STORE_FORMAT_XYZW? 
-       info.pgm_hash == 0x1f2b3c9e || // devicelost? has infinite loop with break condition	
-       info.pgm_hash == 0xfefebf9f) // last cmd before last submit
+       info.pgm_hash == 0xa954e79d ||
+       info.pgm_hash == 0xa509af23 ||
+       info.pgm_hash == 0xfefebf9f ||
+       info.pgm_hash == 0x5ecabf03 ||
+       info.pgm_hash == 0x3d5ebf4e ) // last cmd before last submit
        return nullptr;   
     
     RefreshComputeKey();
