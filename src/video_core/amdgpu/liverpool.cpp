@@ -226,14 +226,6 @@ Liverpool::Task Liverpool::ProcessGraphics(std::span<const u32> dcb, std::span<c
                 regs.SetDefaults();
                 break;
             }
-	    case PM4ItOpcode::SetBase: {
-		LOG_INFO(Render, "called SetBase");
-		break;
-	    }
-	    case PM4ItOpcode::DispatchIndirect: {
-		LOG_INFO(Render, "called DispatchIndirect");
-		break;
-	    }
 	    case PM4ItOpcode::DrawIndirect: {
 		LOG_INFO(Render, "called DrawIndirect");
 		break;

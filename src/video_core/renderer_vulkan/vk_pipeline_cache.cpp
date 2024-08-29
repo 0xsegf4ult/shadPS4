@@ -181,7 +181,8 @@ const ComputePipeline* PipelineCache::GetComputePipeline() {
     const u64 hash = bininfo->shader_hash;
     const VAddr pgm_base = pgm->template Address<VAddr>();
     auto info = MakeShaderInfo(Shader::Stage::Compute, pgm->user_data, pgm_base, hash, liverpool->regs);
-    if(info.pgm_hash == 0x4ca76892 || // DS_APPEND , broken code
+    if(info.pgm_hash == 0xa509af23 || // DS_APPEND, broken code on continue
+       info.pgm_hash == 0x4ca76892 || // DS_APPEND , broken code
        info.pgm_hash == 0x2da7fe60 || // DS_APPEND, DS_CONSUME, S_CBRANCH_EXECNZ, S_MAX_I32, V_MAX3_I32, TBUFFER_STORE_FORMAT_XYZW? 
        info.pgm_hash == 0xfefebf9f || // character creation and loading laggy, causes device lost
        //info.pgm_hash == 0x8b355b5a || probably works fine, currently white overlay, likely post processing

@@ -85,12 +85,12 @@ void Rasterizer::DispatchDirect() {
     if (!pipeline) {
         return;
     }
-
+/*
     if(pipeline->info->pgm_hash != last_cs_hash)
     {
-	//    LOG_INFO(Render_Vulkan, "bound compute pipe hash {:#x}", pipeline->info->pgm_hash);
+	    LOG_INFO(Render_Vulkan, "bound compute pipe hash {:#x}", pipeline->info->pgm_hash);
 	    last_cs_hash = pipeline->info->pgm_hash;
-    }
+    }*/
 
     try {
         const auto has_resources = pipeline->BindResources(buffer_cache, texture_cache);
@@ -116,6 +116,11 @@ void Rasterizer::DispatchIndirect(VAddr address, u32 offset, u32 size) {
         return;
     }
 
+    if(pipeline->info->pgm_hash != last_cs_hash)
+    {
+	    LOG_INFO(Render_Vulkan, "dispatch_indirect: bound compute pipe hash {:#x}", pipeline->info->pgm_hash);
+	    last_cs_hash = pipeline->info->pgm_hash;
+    }
     try {
         const auto has_resources = pipeline->BindResources(buffer_cache, texture_cache);
         if (!has_resources) {

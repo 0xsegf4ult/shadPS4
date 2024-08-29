@@ -34,7 +34,7 @@ enum class MemoryUsage {
 constexpr vk::BufferUsageFlags ReadFlags =
     vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eUniformTexelBuffer |
     vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eIndexBuffer |
-    vk::BufferUsageFlagBits::eVertexBuffer;
+    vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eIndirectBuffer;
 
 constexpr vk::BufferUsageFlags AllFlags = ReadFlags | vk::BufferUsageFlagBits::eTransferDst |
                                           vk::BufferUsageFlagBits::eStorageTexelBuffer |
