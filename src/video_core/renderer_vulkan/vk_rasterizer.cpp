@@ -42,6 +42,39 @@ void Rasterizer::CpSync() {
                            vk::DependencyFlagBits::eByRegion, ib_barrier, {}, {});
 }
 
+static void skipped_gfx_shaders_marker(const Liverpool::Regs& regs, Rasterizer& rasterizer)
+{
+    for (u32 i = 0; i < MaxShaderStages; i++) {
+        if(!regs.stage_enable.IsStageEnabled(i)) {
+	    continue;
+	}
+
+	auto* pgm = regs.ProgramForStage(i);
+	if(!pgm || !pgm->Address<u32*>()) {
+	    continue;
+        }
+
+	const auto* bininfo = Liverpool::GetBinaryInfo(*pgm);
+	if(!bininfo->Valid()) {
+	    continue;
+	}
+
+	rasterizer.ScopeMarkerBegin(fmt::format("skipped {}_{:#x}", Shader::Stage{i}, bininfo->shader_hash));
+	rasterizer.ScopeMarkerEnd();
+    }
+}
+
+static void skipped_compute_shader_marker(const Liverpool::Regs& regs, Rasterizer& rasterizer)
+{
+	const auto& cs_pgm = regs.cs_program;
+	const auto* bininfo = Liverpool::GetBinaryInfo(cs_pgm);
+	if(!bininfo->Valid())
+		return;
+
+	rasterizer.ScopeMarkerBegin(fmt::format("skipped cs_{:#x}", bininfo->shader_hash));
+	rasterizer.ScopeMarkerEnd();
+}
+
 void Rasterizer::Draw(bool is_indexed, u32 index_offset) {
     RENDERER_TRACE;
 
@@ -49,7 +82,8 @@ void Rasterizer::Draw(bool is_indexed, u32 index_offset) {
     const auto& regs = liverpool->regs;
     const GraphicsPipeline* pipeline = pipeline_cache.GetGraphicsPipeline();
     if (!pipeline) {
-        return;
+ 	skipped_gfx_shaders_marker(regs, *this);
+     	return;
     }
 
     try {
@@ -86,6 +120,7 @@ void Rasterizer::DrawIndirect(bool is_indexed, VAddr address, u32 offset, u32 si
     const auto& regs = liverpool->regs;
     const GraphicsPipeline* pipeline = pipeline_cache.GetGraphicsPipeline();
     if (!pipeline) {
+	skipped_gfx_shaders_marker(regs, *this);
         return;
     }
 
@@ -125,6 +160,7 @@ void Rasterizer::DispatchDirect() {
     const auto& cs_program = liverpool->regs.cs_program;
     const ComputePipeline* pipeline = pipeline_cache.GetComputePipeline();
     if (!pipeline) {
+	skipped_compute_shader_marker(liverpool->regs, *this);
         return;
     }
 
@@ -149,6 +185,7 @@ void Rasterizer::DispatchIndirect(VAddr address, u32 offset, u32 size) {
     const auto& cs_program = liverpool->regs.cs_program;
     const ComputePipeline* pipeline = pipeline_cache.GetComputePipeline();
     if (!pipeline) {
+	skipped_compute_shader_marker(liverpool->regs, *this);
         return;
     }
 
