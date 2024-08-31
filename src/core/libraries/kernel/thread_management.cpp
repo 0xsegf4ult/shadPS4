@@ -1062,14 +1062,14 @@ int PS4_SYSV_ABI scePthreadCreate(ScePthread* thread, const ScePthreadAttr* attr
 
 ScePthread PThreadPool::Create() {
     std::scoped_lock lock{m_mutex};
-
+/*
     for (auto* p : m_threads) {
         if (p->is_free) {
             p->is_free = false;
             return p;
         }
     }
-
+*/
 #ifdef _WIN64
     auto* ret = new PthreadInternal{};
 #else
