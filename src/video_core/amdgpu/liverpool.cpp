@@ -156,6 +156,32 @@ Liverpool::Task Liverpool::ProcessCeUpdate(std::span<const u32> ccb) {
     TracyFiberLeave;
 }
 
+constexpr static std::pair<u64, u64> get_gfx_shaders(const Liverpool::Regs& regs) {
+
+    auto find_stage_hash = [&regs](Shader::Stage stage) -> u64 {
+	auto idx = std::to_underlying(stage);    
+        if(regs.stage_enable.IsStageEnabled(idx)) {
+            auto* pgm = regs.ProgramForStage(idx);
+            if(pgm && pgm->Address<u32*>()) {
+                const auto* bininfo = Liverpool::GetBinaryInfo(*pgm);
+	        if(bininfo->Valid()) {
+	            return bininfo->shader_hash;
+                }
+	    }
+        }
+ 
+        return 0;
+    };
+
+    return std::make_pair(find_stage_hash(Shader::Stage::Vertex), find_stage_hash(Shader::Stage::Fragment));
+}
+
+constexpr static u64 get_compute_shader(const Liverpool::Regs& regs) {
+    const auto& cs_pgm = regs.cs_program;
+    const auto* bininfo = Liverpool::GetBinaryInfo(cs_pgm);
+    return bininfo->shader_hash;
+}
+
 Liverpool::Task Liverpool::ProcessGraphics(std::span<const u32> dcb, std::span<const u32> ccb) {
     TracyFiberEnter(dcb_task_name);
 
@@ -332,7 +358,8 @@ Liverpool::Task Liverpool::ProcessGraphics(std::span<const u32> dcb, std::span<c
                 regs.draw_initiator = draw_index->draw_initiator;
                 if (rasterizer) {
                     const auto cmd_address = reinterpret_cast<const void*>(header);
-                    rasterizer->ScopeMarkerBegin(fmt::format("dcb:{}:DrawIndex2", cmd_address));
+                    auto [vsh, fsh] = get_gfx_shaders(regs);
+		    rasterizer->ScopeMarkerBegin(fmt::format("dcb:{}:DrawIndex2 | vs_{:#x} | fs_{:#x}", cmd_address, vsh, fsh));
                     rasterizer->Breadcrumb(u64(cmd_address));
                     rasterizer->Draw(true);
                     rasterizer->ScopeMarkerEnd();
@@ -347,8 +374,9 @@ Liverpool::Task Liverpool::ProcessGraphics(std::span<const u32> dcb, std::span<c
                 regs.draw_initiator = draw_index_off->draw_initiator;
                 if (rasterizer) {
                     const auto cmd_address = reinterpret_cast<const void*>(header);
+		    auto [vsh, fsh] = get_gfx_shaders(regs);
                     rasterizer->ScopeMarkerBegin(
-                        fmt::format("dcb:{}:DrawIndexOffset2", cmd_address));
+                        fmt::format("dcb:{}:DrawIndexOffset2 | vs_{:#x} | fs_{:#x}", cmd_address, vsh, fsh));
                     rasterizer->Breadcrumb(u64(cmd_address));
                     rasterizer->Draw(true, draw_index_off->index_offset);
                     rasterizer->ScopeMarkerEnd();
@@ -361,7 +389,8 @@ Liverpool::Task Liverpool::ProcessGraphics(std::span<const u32> dcb, std::span<c
                 regs.draw_initiator = draw_index->draw_initiator;
                 if (rasterizer) {
                     const auto cmd_address = reinterpret_cast<const void*>(header);
-                    rasterizer->ScopeMarkerBegin(fmt::format("dcb:{}:DrawIndexAuto", cmd_address));
+                    auto [vsh, fsh] = get_gfx_shaders(regs);
+		    rasterizer->ScopeMarkerBegin(fmt::format("dcb:{}:DrawIndexAuto | vs_{:#x} | fs_{:#x}", cmd_address, vsh, fsh));
                     rasterizer->Breadcrumb(u64(cmd_address));
                     rasterizer->Draw(false);
                     rasterizer->ScopeMarkerEnd();
@@ -375,7 +404,8 @@ Liverpool::Task Liverpool::ProcessGraphics(std::span<const u32> dcb, std::span<c
                 const auto size = sizeof(PM4CmdDrawIndirect::DrawInstancedArgs);
                 if (rasterizer) {
                     const auto cmd_address = reinterpret_cast<const void*>(header);
-                    rasterizer->ScopeMarkerBegin(fmt::format("dcb:{}:DrawIndirect", cmd_address));
+		    auto [vsh, fsh] = get_gfx_shaders(regs);
+                    rasterizer->ScopeMarkerBegin(fmt::format("dcb:{}:DrawIndirect | vs_{:#x} | fs_{:#x}", cmd_address, vsh, fsh));
                     rasterizer->Breadcrumb(u64(cmd_address));
                     rasterizer->DrawIndirect(false, ib_address, offset, size);
                     rasterizer->ScopeMarkerEnd();
@@ -390,8 +420,9 @@ Liverpool::Task Liverpool::ProcessGraphics(std::span<const u32> dcb, std::span<c
                 const auto size = sizeof(PM4CmdDrawIndexIndirect::DrawIndexInstancedArgs);
                 if (rasterizer) {
                     const auto cmd_address = reinterpret_cast<const void*>(header);
+		    auto [vsh, fsh] = get_gfx_shaders(regs);
                     rasterizer->ScopeMarkerBegin(
-                        fmt::format("dcb:{}:DrawIndexIndirect", cmd_address));
+                        fmt::format("dcb:{}:DrawIndexIndirect | vs_{:#x} | fs_{:#x}", cmd_address, vsh, fsh));
                     rasterizer->Breadcrumb(u64(cmd_address));
                     rasterizer->DrawIndirect(true, ib_address, offset, size);
                     rasterizer->ScopeMarkerEnd();
@@ -406,7 +437,7 @@ Liverpool::Task Liverpool::ProcessGraphics(std::span<const u32> dcb, std::span<c
                 regs.cs_program.dispatch_initiator = dispatch_direct->dispatch_initiator;
                 if (rasterizer && (regs.cs_program.dispatch_initiator & 1)) {
                     const auto cmd_address = reinterpret_cast<const void*>(header);
-                    rasterizer->ScopeMarkerBegin(fmt::format("dcb:{}:Dispatch", cmd_address));
+                    rasterizer->ScopeMarkerBegin(fmt::format("dcb:{}:Dispatch | cs_{:#x}", cmd_address, get_compute_shader(regs)));
                     rasterizer->Breadcrumb(u64(cmd_address));
                     rasterizer->DispatchDirect();
                     rasterizer->ScopeMarkerEnd();
@@ -422,7 +453,7 @@ Liverpool::Task Liverpool::ProcessGraphics(std::span<const u32> dcb, std::span<c
                 if (rasterizer && (regs.cs_program.dispatch_initiator & 1)) {
                     const auto cmd_address = reinterpret_cast<const void*>(header);
                     rasterizer->ScopeMarkerBegin(
-                        fmt::format("dcb:{}:DispatchIndirect", cmd_address));
+                        fmt::format("dcb:{}:DispatchIndirect | cs_{:#x}", cmd_address, get_compute_shader(regs)));
                     rasterizer->Breadcrumb(u64(cmd_address));
                     rasterizer->DispatchIndirect(ib_address, offset, size);
                     rasterizer->ScopeMarkerEnd();
@@ -587,7 +618,7 @@ Liverpool::Task Liverpool::ProcessCompute(std::span<const u32> acb, int vqid) {
             regs.cs_program.dispatch_initiator = dispatch_direct->dispatch_initiator;
             if (rasterizer && (regs.cs_program.dispatch_initiator & 1)) {
                 const auto cmd_address = reinterpret_cast<const void*>(header);
-                rasterizer->ScopeMarkerBegin(fmt::format("acb[{}]:{}:Dispatch", vqid, cmd_address));
+                rasterizer->ScopeMarkerBegin(fmt::format("acb[{}]:{}:Dispatch | cs_{:#x}", vqid, cmd_address, get_compute_shader(regs)));
                 rasterizer->Breadcrumb(u64(cmd_address));
                 rasterizer->DispatchDirect();
                 rasterizer->ScopeMarkerEnd();
