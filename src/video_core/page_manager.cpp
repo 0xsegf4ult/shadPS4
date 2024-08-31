@@ -9,6 +9,7 @@
 #include "video_core/renderer_vulkan/vk_rasterizer.h"
 
 #ifndef _WIN64
+#define ENABLE_USERFAULTFD
 #include <fcntl.h>
 #include <poll.h>
 #include <signal.h>
@@ -64,7 +65,7 @@ struct PageManager::Impl {
     inline static Vulkan::Rasterizer* rasterizer;
     void* veh_handle{};
 };
-#elif ENABLE_USERFAULTFD
+#elif defined ENABLE_USERFAULTFD
 struct PageManager::Impl {
     Impl(Vulkan::Rasterizer* rasterizer_) : rasterizer{rasterizer_} {
         uffd = syscall(__NR_userfaultfd, O_CLOEXEC | O_NONBLOCK);
