@@ -112,8 +112,9 @@ bool ComputePipeline::BindResources(VideoCore::BufferCache& buffer_cache,
         const auto src_sharp = src.GetSharp(*info);
         const auto& dst = info->texture_buffers[1];
         const auto dst_sharp = dst.GetSharp(*info);
-        if (dst_sharp.base_address == 0x510e0000 || dst_sharp.base_address == 0x1926e0000 ||
-            dst_sharp.base_address == 0x1d42e0000) {
+	//LOG_WARNING(Render_Vulkan, "0x3d5ebf4e {:#x} -> {:#x}", src_sharp.base_address, dst_sharp.base_address);
+        if (dst_sharp.base_address == 0x510e0000 || dst_sharp.base_address == 0x1926e0000 || dst_sharp.base_address == 0x1928e0000
+            || dst_sharp.base_address == 0x1d42e0000 || dst_sharp.base_address == 0x4f0d8000 ) {
             VideoCore::ImageViewInfo view_info;
             view_info.format = vk::Format::eR8G8B8A8Unorm;
             view_info.type = vk::ImageViewType::e2D;
@@ -122,8 +123,8 @@ bool ComputePipeline::BindResources(VideoCore::BufferCache& buffer_cache,
             AmdGpu::Image src_image;
             src_image.base_address = src_sharp.base_address >> 8;
             src_image.base_level = 0;
-            src_image.width = 1920 - 1;
-            src_image.height = 1080 - 1;
+            src_image.width = 1280 - 1;
+            src_image.height = 720 - 1;
             src_image.depth = 1;
             src_image.data_format = u64(AmdGpu::DataFormat::Format8_8_8_8);
             src_image.num_format = u64(AmdGpu::NumberFormat::Unorm);
@@ -131,7 +132,7 @@ bool ComputePipeline::BindResources(VideoCore::BufferCache& buffer_cache,
             src_image.dst_sel_y = 5;
             src_image.dst_sel_z = 6;
             src_image.dst_sel_w = 7;
-            src_image.pitch = 1920 - 1;
+            src_image.pitch = 1280 - 1;
             src_image.type = u64(AmdGpu::ImageType::Color2D);
             src_image.tiling_index = u64(AmdGpu::TilingMode::Display_MacroTiled);
 
@@ -167,10 +168,12 @@ bool ComputePipeline::BindResources(VideoCore::BufferCache& buffer_cache,
                                             .layerCount = 1,
                                         },
                                         .dstOffset = {0, 0, 0},
-                                        .extent = {1920, 1080, 1},
+                                        .extent = {1280, 720, 1},
                                         };
             cmdbuf.copyImage(src_img.image, vk::ImageLayout::eTransferSrcOptimal, dst_img.image,
                              vk::ImageLayout::eTransferDstOptimal, copy);
+
+	 //   LOG_WARNING(Render_Vulkan, "Writing to aliased framebuffer {:#x}", dst_sharp.base_address);
             return false;
         }
     }
@@ -223,7 +226,8 @@ bool ComputePipeline::BindResources(VideoCore::BufferCache& buffer_cache,
         vk::BufferView& buffer_view = buffer_views.emplace_back(VK_NULL_HANDLE);
         if (vsharp.GetDataFmt() != AmdGpu::DataFormat::FormatInvalid) {
             const VAddr address = vsharp.base_address;
-            const u32 size = vsharp.GetSize();
+           // const u32 size = std::min(vsharp.GetSize(), 134217728u);
+	    const u32 size = vsharp.GetSize();
             if (desc.is_written) {
                 if (texture_cache.TouchMeta(address, true)) {
                     LOG_TRACE(Render_Vulkan, "Metadata update skipped");
