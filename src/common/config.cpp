@@ -29,6 +29,7 @@ static u32 vblankDivider = 1;
 static bool vkValidation = false;
 static bool vkValidationSync = false;
 static bool vkValidationGpu = false;
+static bool vkRobustAccess = false;
 static bool rdocEnable = false;
 static bool rdocMarkersEnable = false;
 // Gui
@@ -140,6 +141,10 @@ bool vkValidationGpuEnabled() {
     return vkValidationGpu;
 }
 
+bool vkRobustAccessEnabled() {
+    return vkRobustAccess;
+}
+
 void setGpuId(s32 selectedGpuId) {
     gpuId = selectedGpuId;
 }
@@ -182,6 +187,10 @@ void setVkValidation(bool enable) {
 
 void setVkSyncValidation(bool enable) {
     vkValidationSync = enable;
+}
+
+void setVkRobustAccessEnabled(bool enable) {
+    vkRobustAccess = enable;
 }
 
 void setRdocEnabled(bool enable) {
@@ -383,6 +392,7 @@ void load(const std::filesystem::path& path) {
         vkValidation = toml::find_or<bool>(vk, "validation", false);
         vkValidationSync = toml::find_or<bool>(vk, "validation_sync", false);
         vkValidationGpu = toml::find_or<bool>(vk, "validation_gpu", true);
+	vkRobustAccess = toml::find_or<bool>(vk, "robust_access", false);
         rdocEnable = toml::find_or<bool>(vk, "rdocEnable", false);
         rdocMarkersEnable = toml::find_or<bool>(vk, "rdocMarkersEnable", false);
     }
@@ -461,6 +471,7 @@ void save(const std::filesystem::path& path) {
     data["Vulkan"]["validation_gpu"] = vkValidationGpu;
     data["Vulkan"]["rdocEnable"] = rdocEnable;
     data["Vulkan"]["rdocMarkersEnable"] = rdocMarkersEnable;
+    data["Vulkan"]["robust_access"] = vkRobustAccess;
     data["Debug"]["DebugDump"] = isDebugDump;
     data["GUI"]["theme"] = mw_themes;
     data["GUI"]["iconSize"] = m_icon_size;
@@ -504,6 +515,7 @@ void setDefaultValues() {
     shouldDumpPM4 = false;
     vblankDivider = 1;
     vkValidation = false;
+    vkRobustAccess = false;
     rdocEnable = false;
     emulator_language = "en";
     m_language = 1;

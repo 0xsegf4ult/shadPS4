@@ -58,10 +58,12 @@ void setLogFilter(const std::string& type);
 void setVkValidation(bool enable);
 void setVkSyncValidation(bool enable);
 void setRdocEnabled(bool enable);
+void setVkRobustAccessEnabled(bool enable);
 
 bool vkValidationEnabled();
 bool vkValidationSyncEnabled();
 bool vkValidationGpuEnabled();
+bool vkRobustAccessEnabled();
 
 // Gui
 void setMainWindowGeometry(u32 x, u32 y, u32 w, u32 h);

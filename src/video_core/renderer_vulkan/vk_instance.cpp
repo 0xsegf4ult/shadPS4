@@ -331,6 +331,8 @@ bool Instance::CreateDevice() {
         },
         vk::PhysicalDeviceRobustness2FeaturesEXT{
             .nullDescriptor = true,
+	    .robustImageAccess2 = Config::vkRobustAccessEnabled(),
+	    .robustBufferAccess2 = Config::vkRobustAccessEnabled()
         },
         vk::PhysicalDeviceSynchronization2Features{
             .synchronization2 = true,

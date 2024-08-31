@@ -154,7 +154,7 @@ vk::ShaderModule ShaderCache::CompileModule(Shader::Info& info, std::span<const 
         try {
             module = instance.GetDevice().createShaderModule(sm_ci);
         } catch(vk::SystemError& err) {
-            LOG_ERROR(Render_Vulkan, "Failed to load shader {} from disk, falling back to compilation", name);
+            LOG_ERROR(Render_Vulkan, "Failed to load shader {} from disk, falling back to compilation", filename);
             module = CompileSPV(spv, instance.GetDevice());
         }	    
     } else {
