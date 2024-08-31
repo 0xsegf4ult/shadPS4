@@ -66,24 +66,24 @@ const ComputePipeline* PipelineCache::GetComputePipeline() {
 bool ShouldSkipShader(u64 shader_hash, const char* shader_type) {
     static constexpr auto skip_hashes = std::to_array<u64>
      ({
-      0xa509af23, 
+      0xa509af23, // bb-hacks 
       0x4ca76892, // DS_APPEND
-      0xa954e79d,
+      0xa954e79d, // bb-hacks
       0x42f2a521, // DS_APPEND, 
       0x2da7fe60, // DS_APPEND, DS_CONSUME, S_CBRANCH_EXECNZ, S_MAX_I32, V_MAX3_I32, TBUFFER_STORE_FORMAT_XYZW
-      0x1635154c,
-      0x8e3f8dc4,
+      0x1635154c, // bb-hacks
+      0x8e3f8dc4, // bb-hacks  buffer_load non imm soffset
       0xbb2ac1cb, // DEVICE LOST FS
-      0x1ae03d75, // DEVICE LOST FS
+      0x1ae03d75, // DEVICE LOST FS, write to 128x128
       0xff841760, // DEVICE LOST FS
-      0x6cf3c76,  // DEVICE LOST FS
-      0x1f654729, // DEVICE LOST FS
-      0x12483d6d, // DEVICE LOST FS
+      0x6cf3c76,  // DEVICE LOST FS, write to 128x128
+      0x1f654729, // DEVICE LOST FS, same render pass as below
+      0x12483d6d, // DEVICE LOST FS, some 128x128 probably cubemap
       0xbae5454e, // DEVICE LOST FS
       0xe96447c3, // DEVICE LOST FS
       0xb5b52d63, // DEVICE LOST FS
       0x370174f7, // DEVICE LOST FS 
-      0xf61fd27,  // DEVICE LOST FS
+      0xf61fd27,  // DEVICE LOST FS, writes to cubemap
       0xa22c7f71, // DEVICE LOST FS
       //0xfefebf9f, // DEVICE LOST MYSTERY MEAT
      });//, 0x8747a367});//, 0xb0acf50, 0xfefebf9f};
