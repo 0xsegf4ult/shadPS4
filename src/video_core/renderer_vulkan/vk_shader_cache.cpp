@@ -127,15 +127,41 @@ vk::ShaderModule ShaderCache::CompileModule(Shader::Info& info, std::span<const 
     const auto ir_program = Shader::TranslateProgram(inst_pool, block_pool, code, info, profile);
 
     // Compile IR to SPIR-V
+    // Do this even when loading from disk to keep reflection info
     const auto spv = Shader::Backend::SPIRV::EmitSPIRV(profile, ir_program, binding);
     if (Config::dumpShaders()) {
         DumpShader(spv, info.pgm_hash, info.stage, perm_idx, "spv");
     }
 
+    vk::ShaderModule module;
     // Create module and set name to hash in renderdoc
-    const auto module = CompileSPV(spv, instance.GetDevice());
-    ASSERT(module != VK_NULL_HANDLE);
+    using namespace Common::FS;
     const auto name = fmt::format("{}_{:#x}_{}", info.stage, info.pgm_hash, perm_idx);
+    const auto patch_dir = GetUserPath(PathType::ShaderDir) / "patches";
+    const auto filename = fmt::format("{}.spv", name);
+    if(std::filesystem::exists(patch_dir / filename)) {
+   	LOG_WARNING(Render_Vulkan, "Replacing shader {} with SPIRV from disk", name);
+	std::vector<u32> patch_spv;
+	const auto file = IOFile{patch_dir / filename, FileAccessMode::Read};
+	patch_spv.resize(file.GetSize() / sizeof(u32));
+	file.ReadSpan(std::span<u32>{patch_spv.data(), patch_spv.size()});
+
+	const vk::ShaderModuleCreateInfo sm_ci = {
+	    .codeSize = patch_spv.size() * sizeof(u32),
+            .pCode = patch_spv.data(),
+        };
+
+        try {
+            module = instance.GetDevice().createShaderModule(sm_ci);
+        } catch(vk::SystemError& err) {
+            LOG_ERROR(Render_Vulkan, "Failed to load shader {} from disk, falling back to compilation", name);
+            module = CompileSPV(spv, instance.GetDevice());
+        }	    
+    } else {
+    	module = CompileSPV(spv, instance.GetDevice());
+    }
+    
+    ASSERT(module != VK_NULL_HANDLE);
     Vulkan::SetObjectName(instance.GetDevice(), module, name);
     return module;
 }
