@@ -64,11 +64,31 @@ const ComputePipeline* PipelineCache::GetComputePipeline() {
 }
 
 bool ShouldSkipShader(u64 shader_hash, const char* shader_type) {
-    static constexpr std::array<u64, 7> skip_hashes = {0xa509af23, 0x4ca76892, 0xa954e79d,
-                                                       0x42f2a521, 0x2da7fe60, 0x1635154c,
-                                                       0x8e3f8dc4};
+    static constexpr auto skip_hashes = std::to_array<u64>
+     ({
+      0xa509af23, 
+      0x4ca76892, // DS_APPEND
+      0xa954e79d,
+      0x42f2a521, // DS_APPEND, 
+      0x2da7fe60, // DS_APPEND, DS_CONSUME, S_CBRANCH_EXECNZ, S_MAX_I32, V_MAX3_I32, TBUFFER_STORE_FORMAT_XYZW
+      0x1635154c,
+      0x8e3f8dc4,
+      0xbb2ac1cb, // DEVICE LOST FS
+      0x1ae03d75, // DEVICE LOST FS
+      0xff841760, // DEVICE LOST FS
+      0x6cf3c76,  // DEVICE LOST FS
+      0x1f654729, // DEVICE LOST FS
+      0x12483d6d, // DEVICE LOST FS
+      0xbae5454e, // DEVICE LOST FS
+      0xe96447c3, // DEVICE LOST FS
+      0xb5b52d63, // DEVICE LOST FS
+      0x370174f7, // DEVICE LOST FS 
+      0xf61fd27,  // DEVICE LOST FS
+      0xa22c7f71, // DEVICE LOST FS
+      //0xfefebf9f, // DEVICE LOST MYSTERY MEAT
+     });//, 0x8747a367});//, 0xb0acf50, 0xfefebf9f};
     if (std::ranges::contains(skip_hashes, shader_hash)) {
-        LOG_WARNING(Render_Vulkan, "Skipped {} shader hash {:#x}.", shader_type, shader_hash);
+    //    LOG_WARNING(Render_Vulkan, "Skipped {} shader hash {:#x}.", shader_type, shader_hash);
         return true;
     }
     return false;
